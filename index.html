@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R.R. Motorcycle Shop and Parts — Rev Up Your Ride</title>
+  <meta name="description" content="Certified ECU remaps, dyno runs, tune-ups, genuine motorcycle parts, and advanced reservation tracking in Brgy. Lag-on, Daet, Camarines Norte.">
+  <meta name="theme-color" content="#101114">
+  <link rel="icon" type="image/jpeg" href="motoRR.jpg">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.3.3/dist/email.min.js"></script>
+</head>
+<body>
+
+<!-- ============ ADMIN LIVE CMS FLOATING STATUS BAR ============ -->
+<div id="adminCmsBar" class="admin-cms-bar hidden" role="region" aria-label="Admin Live CMS Controls">
+  <div class="wrap admin-cms-inner">
+    <div class="admin-cms-status">
+      <span class="status-dot-solid" aria-hidden="true"></span>
+      <strong>Admin CMS Mode Active</strong>
+      <span class="cms-role-tag">Shop Editor &amp; Analytics</span>
+    </div>
+    <div class="admin-cms-quick-actions">
+      <button type="button" class="btn btn-gold sm" id="quickAddServiceBtn">+ New Service</button>
+      <button type="button" class="btn btn-gold sm" id="quickAddPartBtn">+ New Part/Accessory</button>
+      <button type="button" class="btn btn-primary sm" id="openAdminAnalyticsBtn">Analytics Dashboard</button>
+      <button type="button" class="btn btn-outline sm" id="openAdminBookingsBtn">Bookings (<span id="cmsPendingCount">0</span>)</button>
+      <button type="button" class="btn btn-outline sm" id="exitAdminModeBtn">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MOBILE TOPBAR (VISIBLE <= 960px) ============ -->
+<header class="mobile-topbar">
+  <button class="burger" id="burger" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="#home" class="brand" aria-label="R.R. Motorcycle Shop and Parts">
+    <div class="brand-logo-frame">
+      <img src="motoRR.jpg" alt="R.R. Moto Shop Logo" class="brand-logo" width="36" height="36">
+    </div>
+    <div class="brand-text">
+      <span class="brand-title">R.R. MOTORCYCLE</span>
+      <span class="brand-sub">SHOP &amp; PARTS</span>
+    </div>
+  </a>
+</header>
+
+<!-- ============ FIXED LEFT SIDEBAR NAVIGATION ============ -->
+<aside class="sidebar" id="sidebar" aria-label="Primary Navigation">
+  <div class="sidebar-top">
+    <a href="#home" class="brand" aria-label="R.R. Motorcycle Shop and Parts">
+      <div class="brand-logo-frame">
+        <img src="motoRR.jpg" alt="R.R. Moto Shop Logo" class="brand-logo" width="44" height="44">
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">R.R. MOTORCYCLE</span>
+        <span class="brand-sub">SHOP &amp; PARTS</span>
+      </div>
+    </a>
+    <div class="sidebar-location-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>Brgy. Lag-on, Daet, Camarines Norte</span>
+    </div>
+
+    <div class="nav-search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input id="search" type="search" placeholder="Search services, parts…" aria-label="Search catalog" autocomplete="off">
+      <button type="button" id="searchClear" class="search-clear hidden" aria-label="Clear search">✕</button>
+    </div>
+  </div>
+
+  <nav id="links" class="sidebar-nav">
+    <a href="#home" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="#services" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span>Services</span>
+    </a>
+    <a href="#catalog" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Catalog</span>
+    </a>
+    <a href="#work" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>Our Work</span>
+    </a>
+    <a href="#book" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Book Bay</span>
+    </a>
+    <a href="#track" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Track Repair</span>
+    </a>
+    <a href="#payment" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <span>Payment</span>
+    </a>
+    <a href="#contact" class="sidebar-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span>Contact &amp; Map</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a href="tel:09182886282" class="sidebar-hotline">
+      <span class="hotline-label">Shop Hotline</span>
+      <strong class="hotline-number">0918 288 6282</strong>
+    </a>
+    <div class="sidebar-bottom-actions">
+      <button class="theme-toggle-btn" id="themeBtn" aria-label="Toggle light or dark theme" title="Toggle theme">
+        <span class="theme-icon light-icon" aria-hidden="true">☀️</span>
+        <span class="theme-icon dark-icon" aria-hidden="true">🌙</span>
+      </button>
+      <button class="btn btn-outline sm hidden" id="adminBtn">Dashboard</button>
+      <button class="btn btn-primary sm" id="authBtn" style="flex:1;">Admin Login</button>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Overlay Backdrop -->
+<div id="navBackdrop" class="nav-backdrop"></div>
+
+<div class="main-wrapper" id="mainWrapper">
+
+<!-- ============ SEARCH RESULTS FLYOUT ============ -->
+<section id="searchResults" class="wrap search-results-wrap hidden" aria-live="polite">
+  <div class="section-head compact">
+    <div>
+      <span class="eyebrow">Instant Catalog Lookup</span>
+      <h2>Search Results</h2>
+    </div>
+    <button type="button" class="btn btn-outline sm" id="closeSearch">Close Results</button>
+  </div>
+  <div id="searchGrid" class="grid cards-grid"></div>
+</section>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section id="home" class="hero">
+    <!-- HERO IMAGE TEMPLATE: Replace 'motorr.jpg' in styles.css (.hero-bg-image) or below with your desired shop banner photo -->
+    <div class="hero-bg-image" aria-hidden="true"></div>
+    <div class="wrap hero-in">
+      <div class="hero-content">
+        <div class="badge-pill">
+          <span>Certified Diagnostics &bull; Fuel Injected &amp; Carb &bull; Dyno Tuning</span>
+        </div>
+        <h1 class="hero-headline">
+          PRECISION TUNING.<br>
+          <span class="text-gradient-red">MAX POWER.</span>
+        </h1>
+        <p class="lead">
+          Trusted motorcycle diagnostics, custom ECU remaps, CVT tuning, and genuine performance parts in Daet, Camarines Norte. Reserve your service bay online and track your repair turnaround.
+        </p>
+        
+        <div class="hero-cta-row">
+          <a class="btn btn-primary lg" href="#book">
+            <span>Book a Service</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="btn-arrow" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+          <a class="btn btn-outline lg" href="#track">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Track My Bike</span>
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number">48+</span>
+            <span class="stat-label">Bikes Tuned</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number">7-Day</span>
+            <span class="stat-label">Workmanship Warranty</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number">₱50</span>
+            <span class="stat-label">Bay Reservation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HERO SHOWCASE IMAGE TEMPLATE: Replace 'motorr.jpg' with your desired shop showcase photo -->
+      <div class="hero-showcase-col">
+        <div class="hero-showcase-card">
+          <img src="motorr.jpg" alt="R.R. Motorcycle Shop &amp; Parts Workshop in Daet" class="hero-showcase-img">
+          <div class="hero-showcase-caption">
+            <div>
+              <strong>R.R. Motorcycle Workshop</strong>
+              <span>Brgy. Lag-on, Daet &bull; Mon–Sat, 8:00 AM – 6:00 PM</span>
+            </div>
+            <span class="showcase-tag">Lag-on Branch</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section id="services" class="wrap section-services">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Professional Workshop</span>
+        <h2>Services Offered</h2>
+        <p class="sub">Advanced ECU diagnostics, ultrasonic throttle cleaning, dyno benchmarking, and precision CVT tuning.</p>
+      </div>
+      <div class="section-head-actions">
+        <button type="button" class="btn btn-outline sm admin-cms-btn hidden" id="cmsAddServiceHeadBtn">+ Add Service (CMS)</button>
+        <div class="service-filters" id="serviceFilterPills">
+          <button class="pill-btn active" data-filter="all">All Services</button>
+          <button class="pill-btn" data-filter="Core">Core Tuning &amp; Engine</button>
+          <button class="pill-btn" data-filter="Maintenance & Upgrades">Maintenance &amp; Upgrades</button>
+        </div>
+      </div>
+    </div>
+    <div id="servicesGrid" class="grid cards-grid"></div>
+  </section>
+
+  <!-- ============ CATALOG ============ -->
+  <section id="catalog" class="wrap section-catalog">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Bikes &amp; Performance Parts</span>
+        <h2>Catalog &amp; Builds</h2>
+        <p class="sub">Browse custom motorcycle builds or discover genuine parts in stock with live availability badges.</p>
+      </div>
+      <div class="section-head-actions">
+        <button type="button" class="btn btn-outline sm admin-cms-btn hidden" id="cmsAddCatalogHeadBtn">+ Add Catalog Item (CMS)</button>
+        <div class="tabs" id="catTabs" role="tablist">
+          <button class="tab-btn on" data-c="motors" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" aria-hidden="true"><circle cx="5" cy="17" r="3"></circle><circle cx="19" cy="17" r="3"></circle><path d="M5 17h5l3-6 4 1 2 5"></path><path d="M9 11l2-4h4"></path></svg>
+            Showcase Builds
+          </button>
+          <button class="tab-btn" data-c="parts" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Parts &amp; Accessories Catalog
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subpart Category Filter Bar -->
+    <div class="service-filters hidden" id="partFilterPills" style="margin-bottom: 1.5rem;">
+      <button class="pill-btn active" data-part-filter="all">All Parts &amp; Components</button>
+      <button class="pill-btn" data-part-filter="CVT">CVT &amp; Transmission</button>
+      <button class="pill-btn" data-part-filter="ECU">ECU &amp; Electrical</button>
+      <button class="pill-btn" data-part-filter="Engine">Engine &amp; Performance</button>
+      <button class="pill-btn" data-part-filter="Accessories">Accessories &amp; Lighting</button>
+    </div>
+
+    <div id="catalogGrid" class="grid cards-grid"></div>
+  </section>
+
+  <!-- ============ ACCOMPLISHMENTS (BEFORE / AFTER) ============ -->
+  <section id="work" class="wrap section-work">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Proven Results</span>
+        <h2>Our Accomplishments</h2>
+        <p class="sub">Slide the center divider to inspect real dyno gains, engine restorations, and custom bodywork.</p>
+      </div>
+      <div class="section-head-actions">
+        <button type="button" class="btn btn-outline sm admin-cms-btn hidden" id="cmsAddAccomplishBtn">+ Add Accomplishment (CMS)</button>
+      </div>
+    </div>
+    <div id="workGrid" class="grid wide-cards-grid"></div>
+  </section>
+
+  <!-- ============ BOOKING & RESERVATION WORKFLOW ============ -->
+  <section id="book" class="wrap section-book-track">
+    <div class="two-col-layout">
+      
+      <!-- Booking Form Column with Downpayment Security & Parts Logic -->
+      <div class="panel-box">
+        <div class="panel-header">
+          <span class="eyebrow">Online Bay Reservation</span>
+          <h2>Book a Service Bay</h2>
+          <p class="sub">Reserve your workshop bay with a ₱50.00 GCash reservation deposit (deducted in full from your final bill).</p>
+        </div>
+
+        <form id="bookForm" class="form-grid" novalidate>
+          
+          <!-- Customer Information -->
+          <div class="form-group">
+            <label for="bookCustomer">Customer Full Name <span class="req">*</span></label>
+            <input id="bookCustomer" name="customer" required placeholder="e.g. Juan Dela Cruz" autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label for="bookPhone">Mobile Number <span class="req">*</span></label>
+            <input id="bookPhone" name="phone" type="tel" required placeholder="0918 288 6282" autocomplete="tel">
+          </div>
+
+          <div class="form-group full-width">
+            <label for="bookEmail">Email Address (For Booking Confirmation) <span class="req">*</span></label>
+            <input id="bookEmail" name="email" type="email" required placeholder="your.name@gmail.com" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="bookBike">Motorcycle Model <span class="req">*</span></label>
+            <input id="bookBike" name="bike" required placeholder="e.g. Yamaha Aerox 155, Honda Click 125">
+          </div>
+
+          <div class="form-group">
+            <label for="bookPlate">Plate Number / MV File No. <span class="req">*</span></label>
+            <input id="bookPlate" name="plate" required placeholder="e.g. 123 ABC or MV-99214">
+          </div>
+
+          <div class="form-group">
+            <label for="bookService">Select Desired Service <span class="req">*</span></label>
+            <select name="service" id="bookService" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="bookDate">Preferred Appointment Date <span class="req">*</span></label>
+            <input id="bookDate" name="date" type="date" required>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- CORE FEATURE: CUSTOMER-SUPPLIED PARTS VS SHOP PARTS LOGIC -->
+          <!-- ========================================================= -->
+          <div class="form-group full-width parts-pricing-selector">
+            <label class="parts-choice-title">
+              <span class="icon-label">🔧</span>
+              Will you bring your own parts for this service? <span class="req">*</span>
+            </label>
+            <div class="parts-toggle-row">
+              <label class="radio-card" id="labelOwnPartsYes">
+                <input type="radio" name="ownParts" value="yes" id="ownPartsYes">
+                <div class="radio-card-content">
+                  <span class="radio-card-title">YES, I will bring my own parts</span>
+                  <span class="radio-card-sub">Base Labor + ₱50.00 Flat Fitment / Handling Fee</span>
+                </div>
+              </label>
+
+              <label class="radio-card active" id="labelOwnPartsNo">
+                <input type="radio" name="ownParts" value="no" id="ownPartsNo" checked>
+                <div class="radio-card-content">
+                  <span class="radio-card-title">NO, Shop supplies parts</span>
+                  <span class="radio-card-sub">Base Labor + Catalog Part Price (Free Fitment)</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Conditional Section A: Customer lists their own parts -->
+            <div id="ownPartsDetailsBox" class="conditional-parts-box hidden">
+              <label for="customerPartsList">Itemized list of parts you are bringing: <span class="req">*</span></label>
+              <textarea id="customerPartsList" name="customerPartsList" rows="2" placeholder="e.g. 1L Motul 7100 10W-40, K&N Oil Filter, Bando Drive Belt, NGK Iridium Spark Plug"></textarea>
+              <p class="field-hint">Note: Customer-supplied parts are inspected prior to installation. A transparent flat ₱50.00 fitment fee applies.</p>
+            </div>
+
+            <!-- Conditional Section B: Shop supplies parts selection -->
+            <div id="shopPartsDetailsBox" class="conditional-parts-box">
+              <label>Select Shop Parts / Consumables to include:</label>
+              <div class="shop-parts-checklist" id="shopPartsChecklist">
+                <!-- Dynamically rendered checklist with live prices -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- CORE FEATURE: RESERVATION FEE & DOWNPAYMENT SECURITY -->
+          <!-- ========================================================= -->
+          <div class="form-group full-width downpayment-security-card">
+            <div class="dp-header">
+              <span class="dp-shield">🛡️</span>
+              <div>
+                <strong>Reservation Fee &amp; Downpayment Security</strong>
+                <p class="dp-sub">A <b>₱50.00 GCash downpayment</b> is required to secure your bay. Deducted in full from your final bill.</p>
+              </div>
+            </div>
+
+            <div class="dp-payment-methods">
+              <label class="pay-radio">
+                <input type="radio" name="downpaymentMethod" value="GCash" checked id="payGCash">
+                <span class="pay-btn-label">GCash Express</span>
+              </label>
+              <label class="pay-radio">
+                <input type="radio" name="downpaymentMethod" value="Cash on Site" id="payCash">
+                <span class="pay-btn-label">Cash on Site</span>
+              </label>
+            </div>
+
+            <!-- GCash Instructions Box -->
+            <div id="gcashBox" class="dp-channel-box">
+              <div class="dp-channel-content">
+                <div class="dp-account-info">
+                  <div class="dp-field"><span>GCash Account:</span> <b>R.R. MOTORCYCLE SHOP</b></div>
+                  <div class="dp-field"><span>GCash Mobile:</span> <b class="highlight-val">0918 288 6282</b></div>
+                  <div class="dp-field"><span>Reservation Fee:</span> <b class="highlight-val">₱50.00</b></div>
+                </div>
+                <div class="form-group" style="margin-top:0.6rem;">
+                  <label for="gcashRef">GCash Reference Number (9–13 digits) <span class="req">*</span></label>
+                  <input id="gcashRef" name="gcashRef" placeholder="e.g. 102938475612" autocomplete="off" inputmode="numeric">
+                </div>
+                <div class="form-group" style="margin-top:0.4rem;">
+                  <label for="proofFile">Upload Proof of Payment (Screenshot / Slip) <span class="req">*</span></label>
+                  <input type="file" id="proofFile" name="proofFile" accept="image/*" class="file-input-field">
+                  <p class="field-hint">Required for GCash reservations so our staff can verify your ₱50.00 deposit.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cash on Site Notice Box -->
+            <div id="cashWarningBox" class="dp-warning-box hidden">
+              <div class="cash-warning-head">
+                <span class="warning-icon">⚠️</span>
+                <strong>Cash on Site Reservation Notice</strong>
+              </div>
+              <p class="cash-warning-text">
+                For Cash on Site bookings, please arrive at our Brgy. Lag-on workshop at least <b>15 minutes before</b> your scheduled slot. Unclaimed bays may be released to walk-in riders.
+              </p>
+              <label class="custom-check-label warning-check">
+                <input type="checkbox" id="cashWarningConfirm">
+                <span>I acknowledge this policy and agree to arrive on time for my scheduled bay.</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- LIVE ESTIMATED QUOTATION & PRICING BREAKDOWN BOX -->
+          <!-- ========================================================= -->
+          <div class="form-group full-width quotation-preview-card">
+            <div class="quote-header">
+              <span class="quote-title">Estimated Expense Breakdown</span>
+              <span class="quote-badge" id="quoteCategoryBadge">Shop Supplies Parts (Fitment Included)</span>
+            </div>
+            
+            <div class="quote-table">
+              <div class="quote-row">
+                <span>Base Service Labor Fee:</span>
+                <span id="quoteBaseLabor">₱650.00</span>
+              </div>
+              <div class="quote-row">
+                <span>Selected Parts Cost:</span>
+                <span id="quotePartsCost">₱0.00</span>
+              </div>
+              <div class="quote-row" id="quoteMarkupRow">
+                <span>Fitment &amp; Handling Fee:</span>
+                <span id="quoteMarkup">₱0.00 (Included)</span>
+              </div>
+              <div class="quote-row quote-gross-total">
+                <strong>Gross Estimated Total:</strong>
+                <strong id="quoteGrossTotal">₱650.00</strong>
+              </div>
+              <div class="quote-row quote-downpayment-row">
+                <span>Reservation Downpayment (GCash Credit):</span>
+                <span class="dp-deduct" id="quoteDownpayment">-₱50.00</span>
+              </div>
+              <div class="quote-row quote-remaining-balance">
+                <strong>Remaining Balance Due Upon Release:</strong>
+                <strong id="quoteBalance">₱600.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="bookNotes">Service Notes / Issues Observed</label>
+            <textarea id="bookNotes" name="notes" rows="2" placeholder="Describe symptoms (e.g. sluggish throttle, check engine light on, stalling, high RPM vibration)"></textarea>
+          </div>
+
+          <div class="form-group full-width checkbox-row">
+            <label class="custom-check-label">
+              <input type="checkbox" id="policyCheck" required>
+              <span>I have read and agree to the <a href="#" data-open="policyModal">Shop Policies &amp; 7-Day Warranty Terms</a>.</span>
+            </label>
+          </div>
+
+          <div class="form-group full-width">
+            <button class="btn btn-primary full-btn" type="submit" id="bookSubmitBtn">
+              <span class="btn-text">Confirm Reservation &amp; Secure Bay</span>
+            </button>
+            <div id="bookMsg" class="form-alert hidden" role="status"></div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Service Tracker Column with J&T-Style Estimated Turnaround & Timeline -->
+      <div class="panel-box" id="track">
+        <div class="panel-header">
+          <span class="eyebrow">Repair Status Lookup</span>
+          <h2>Track Your Bike Status</h2>
+          <p class="sub">Enter your Booking ID or Plate Number to check estimated turnaround time, workshop milestones, billing summary, and technician repair proof.</p>
+        </div>
+
+        <form id="trackForm" class="track-form" novalidate>
+          <div class="track-input-wrap">
+            <input id="trackInput" required placeholder="Booking ID (e.g. RR-DEMO01) or Plate Number" autocomplete="off">
+            <button class="btn btn-primary" type="submit">
+              <span>Check Status</span>
+            </button>
+          </div>
+          <div class="quick-track-chips">
+            <span class="chip-label">Quick Demo:</span>
+            <button type="button" class="chip-btn" data-val="RR-DEMO01">RR-DEMO01</button>
+            <button type="button" class="chip-btn" data-val="ABC 1234">ABC 1234</button>
+            <button type="button" class="chip-btn" data-val="ZX-4RR-99">ZX-4RR-99</button>
+          </div>
+        </form>
+
+        <div id="trackOut" class="track-output-container" role="status">
+          <div class="track-placeholder">
+            <div class="track-placeholder-icon">🏍️</div>
+            <p>Enter your Booking ID above to display live status updates.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ PAYMENT OPTIONS ============ -->
+  <section id="payment" class="wrap section-payment">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Simple &amp; Verified</span>
+        <h2>Payment Methods</h2>
+        <p class="sub">We accept GCash e-Wallet for ₱50.00 bay reservations and Cash on Site over-the-counter upon vehicle release.</p>
+      </div>
+    </div>
+
+    <div class="grid payment-grid">
+      <article class="payment-card payment-card-gcash">
+        <div class="pay-icon-bar">
+          <span class="pay-badge gcash">GCash Express (e-Wallet)</span>
+        </div>
+        <h3>GCash QR &amp; Mobile Transfer</h3>
+        <p>Send your <b>₱50.00 reservation fee</b> or service balance directly via GCash. Upload your payment screenshot in the booking form for quick verification.</p>
+        
+        <!-- GCASH QR TEMPLATE: Place your actual 'gcash-qr-template.jpg' file in the project folder -->
+        <div class="gcash-qr-template-box">
+          <img src="gcash-qr-template.jpg" alt="R.R. Motorcycle Shop GCash QR Code" class="gcash-qr-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="gcash-qr-fallback" style="display:none;">
+            <span>GCash QR Template</span>
+            <small>Drop <code>gcash-qr-template.jpg</code> in folder</small>
+          </div>
+        </div>
+
+        <div class="account-details-box" style="margin-bottom: 1rem;">
+          <div class="detail-field">
+            <span class="detail-label">Account Name:</span>
+            <div class="copy-row">
+              <span class="detail-val">R.R. MOTORCYCLE SHOP</span>
+              <button type="button" class="copy-btn" data-copy="R.R. MOTORCYCLE SHOP">Copy</button>
+            </div>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">GCash Number:</span>
+            <div class="copy-row">
+              <span class="detail-val highlight">0918 288 6282</span>
+              <button type="button" class="copy-btn" data-copy="09182886282">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-outline sm" data-open="qrModal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Enlarge GCash QR &amp; Details
+        </button>
+      </article>
+
+      <article class="payment-card">
+        <div class="pay-icon-bar">
+          <span class="pay-badge cash">Cash on Site</span>
+        </div>
+        <h3>Cash Over-the-Counter</h3>
+        <p>Pay your remaining balance directly at our Brgy. Lag-on workshop counter upon pickup after final test run and mechanic inspection.</p>
+        <div class="pay-footer-note">₱50.00 GCash reservation deposits are deducted in full from your final bill.</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT & MAP ============ -->
+  <section id="contact" class="wrap section-contact">
+    <div class="two-col-layout contact-layout">
+      
+      <div class="contact-info-panel">
+        <span class="eyebrow">Visit or Inquire</span>
+        <h2>Get In Touch</h2>
+        <p class="sub">Located conveniently in Lag-on, Daet. Call us for custom quotes, dyno scheduling, or emergency advice.</p>
+        
+        <div class="contact-details-list">
+          <div class="contact-detail-row">
+            <span class="detail-icon">📍</span>
+            <div>
+              <strong>Shop Location:</strong>
+              <p>G/F Brookside Bldg., San Vicente Road, Brgy. Lag-on, Daet, Camarines Norte</p>
+            </div>
+          </div>
+
+          <div class="contact-detail-row">
+            <span class="detail-icon">⏰</span>
+            <div>
+              <strong>Operating Hours:</strong>
+              <p>Monday &ndash; Saturday: 8:00 AM &ndash; 6:00 PM | Sunday: Closed</p>
+            </div>
+          </div>
+
+          <div class="contact-detail-row">
+            <span class="detail-icon">📞</span>
+            <div>
+              <strong>Hotlines:</strong>
+              <div class="phone-links">
+                <a class="phone-link" href="tel:09182886282">0918 288 6282 (Smart / GCash)</a>
+                <a class="phone-link" href="tel:09196492890">0919 649 2890 (Smart)</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-detail-row">
+            <span class="detail-icon">🌐</span>
+            <div>
+              <strong>Facebook Official:</strong>
+              <p><a href="https://www.facebook.com/RRMotorcyclePartsShop" target="_blank" rel="noopener" class="link-styled">RRMotorcyclePartsShop</a></p>
+            </div>
+          </div>
+        </div>
+
+        <form id="contactForm" class="contact-form" novalidate>
+          <h3>Send Direct Message</h3>
+          <div class="form-group">
+            <input name="name" placeholder="Your Name *" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <input name="email" type="email" placeholder="Your Email Address *" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <input name="phone" type="tel" placeholder="Mobile Number (e.g. 0918 288 6282)" autocomplete="tel">
+          </div>
+          <div class="form-group">
+            <textarea name="message" rows="3" placeholder="Your questions, custom build inquiries, or quote requests… *" required></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">
+            <span>Send Message to Shop</span>
+          </button>
+          <div id="contactMsg" class="form-alert hidden" role="status"></div>
+        </form>
+      </div>
+
+      <div class="map-panel">
+        <div class="map-card-container">
+          <div class="map-header-bar">
+            <div class="map-header-title">
+              <span class="map-pin-icon">📍</span>
+              <strong>Shop Location &amp; Directions</strong>
+            </div>
+            <span class="map-badge-tag">Brgy. Lag-on, Daet</span>
+          </div>
+          <div class="map-frame">
+            <iframe 
+              title="Google Maps Location of R.R. Motorcycle Shop in Lag-on, Daet, Camarines Norte" 
+              loading="lazy" 
+              class="map" 
+              src="https://www.google.com/maps?q=Lag-on,+Daet,+Camarines+Norte&output=embed"
+              allowfullscreen>
+            </iframe>
+          </div>
+          <div class="map-footer-bar">
+            <span class="map-footer-text">G/F Brookside Bldg., San Vicente Road &bull; Near Lag-on Barangay Hall</span>
+            <a href="https://maps.google.com/?q=Lag-on,+Daet,+Camarines+Norte" target="_blank" rel="noopener" class="btn btn-outline sm map-dir-btn">Open in Google Maps</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer-content">
+    <div class="footer-brand">
+      <img src="motoRR.jpg" alt="R.R. Logo" class="footer-logo" width="40" height="40">
+      <div>
+        <strong>R.R. Motorcycle Shop &amp; Parts</strong>
+        <p>Rev Up Your Ride &bull; Lag-on, Daet, Camarines Norte</p>
+      </div>
+    </div>
+    
+    <div class="footer-nav">
+      <a href="#services">Services</a>
+      <a href="#catalog">Catalog</a>
+      <a href="#book">Book</a>
+      <a href="#track">Track</a>
+      <a href="#" data-open="policyModal">Shop Policies</a>
+      <a href="#" data-open="aboutModal">About Capstone</a>
+    </div>
+
+    <div class="footer-copy">
+      <span>&copy; 2026 R.R. Motorcycle Shop &amp; Parts. BSIT IT100 ni Capt. Jamito System. All Rights Reserved.</span>
+    </div>
+  </div>
+</footer>
+</div><!-- /.main-wrapper -->
+
+<!-- ============ MODALS & DIALOGS ============ -->
+
+<!-- 1. LOGIN MODAL -->
+<dialog id="loginModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Admin Authentication</h3>
+      <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    </div>
+    <form id="loginForm" class="modal-body form-grid" novalidate>
+      <p class="modal-subtitle">Authorized mechanics and shop managers only.</p>
+      <div class="form-group full-width">
+        <label for="adminEmail">Email Address</label>
+        <input id="adminEmail" name="email" type="email" placeholder="admin@rr-motorcycle.com" required autocomplete="username">
+      </div>
+      <div class="form-group full-width">
+        <label for="adminPass">Password</label>
+        <input id="adminPass" name="password" type="password" placeholder="Enter password" required autocomplete="current-password">
+      </div>
+      <div class="form-group full-width login-actions">
+        <button class="btn btn-primary full-btn" type="submit">Sign In to Dashboard</button>
+        <button type="button" class="link-btn" id="forgotBtn">Forgot your password?</button>
+      </div>
+      <div id="loginMsg" class="form-alert hidden full-width" role="status"></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- 2. GCASH PAYMENT & QR CODE MODAL -->
+<dialog id="qrModal" class="modal">
+  <div class="modal-dialog modal-md">
+    <div class="modal-header">
+      <h3>GCash Payment &amp; QR Code</h3>
+      <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-card">
+        <div class="qr-header gcash-head">
+          <span class="qr-brand-label">GCash Express Scan</span>
+        </div>
+        <div class="qr-box">
+          <!-- GCASH QR TEMPLATE: Replace 'gcash-qr-template.jpg' with your actual GCash QR image -->
+          <img src="kkk.jpg" alt="RR Motorcycle Shop GCash QR Code" class="gcash-qr-modal-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="gcash-qr-fallback" style="display:none; width:180px; height:180px;">
+            <span>GCash QR Template</span>
+            <small>Add <code>gcash-qr-template.jpg</code></small>
+          </div>
+          <span class="qr-scan-hint">Scan with GCash App (₱50.00 Reservation Fee)</span>
+        </div>
+
+        <div class="account-details-box">
+          <div class="detail-field">
+            <span class="detail-label">Account Name:</span>
+            <div class="copy-row">
+              <span class="detail-val" id="gcashName">RR MOTORCYCLE SHOP</span>
+              <button type="button" class="copy-btn" data-copy="RR MOTORCYCLE SHOP" title="Copy Account Name">Copy</button>
+            </div>
+          </div>
+          <div class="detail-field">
+            <span class="detail-label">Mobile Number:</span>
+            <div class="copy-row">
+              <span class="detail-val highlight" id="gcashNum">0918 288 6282</span>
+              <button type="button" class="copy-btn" data-copy="09182886282" title="Copy Number">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-instruction-box">
+        <strong>Important:</strong> After sending your ₱50.00 reservation fee, save the <b>9–13 digit Reference Number</b> and upload your <b>payment screenshot</b> in the booking form.
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- 3. SHOP POLICY MODAL -->
+<dialog id="policyModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Shop Policies, Downpayments &amp; Warranty</h3>
+      <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-body prose">
+      <div class="policy-block">
+        <h4>1. Reservation Fee &amp; Downpayment Protection</h4>
+        <p>To prevent no-show appointments and reserve technician bay time, an advance downpayment (₱50.00 standard) is required. The downpayment is <b>100% credited</b> toward your total final invoice.</p>
+      </div>
+
+      <div class="policy-block">
+        <h4>2. Customer-Supplied vs. Shop Parts</h4>
+        <p>Customers may bring their own replacement parts (subject to a standard flat ₱50.00 fitment and safety inspection fee). For shop-supplied genuine catalog parts, fitment is completely free with direct itemized retail pricing, backed by our shop warranty.</p>
+      </div>
+
+      <div class="policy-block">
+        <h4>3. 7-Day Workmanship Warranty</h4>
+        <p>All tune-up, ECU diagnostics, and mechanical repairs are covered by our <b>7-day workmanship warranty</b>. Defective components supplied by our shop will be replaced at zero labor cost.</p>
+      </div>
+
+      <div class="policy-block">
+        <h4>4. Vehicle Release &amp; Storage</h4>
+        <p>Bikes marked as <b>Ready for Pick-Up</b> should be retrieved within 3 business days. Digital receipts and itemized payslips are provided upon vehicle clearance.</p>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- 4. ABOUT & CREDITS MODAL -->
+<dialog id="aboutModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>About Project &amp; Credits</h3>
+      <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-body prose">
+      <div class="about-hero">
+        <img src="motoRR.jpg" alt="R.R. Emblem" class="about-emblem" width="80" height="80">
+        <div>
+          <h4>RR Motorcycle Shop &amp; Parts</h4>
+          <span class="sub-badge">BSIT IT100 Project 2026</span>
+        </div>
+      </div>
+      <p>A practical, realistic motorcycle shop management and storefront platform with live Firestore database sync, clear pricing, and repair tracking in Brgy. Lag-on, Daet, Camarines Norte.</p>
+      
+      <div class="credits-grid">
+        <div class="credit-box">
+          <span class="credit-label">Developed For:</span>
+          <strong>RR Motorcycle Shop and Parts</strong>
+          <small>Brgy. Lag-on, Daet, Camarines Norte</small>
+        </div>
+        <div class="credit-box">
+          <span class="credit-label">Technology Architecture:</span>
+          <strong>HTML5 &bull; CSS3 &bull; ES Modules</strong>
+          <small>Firebase Firestore &bull; Storage &bull; Web API &bull; EmailJS</small>
+        </div>
+      </div>
+      
+      <div class="version-tag">R.R. Motorcycle Shop &bull; Daet, Camarines Norte</div>
+    </div>
+  </div>
+</dialog>
+
+<!-- 5. FULL-SCREEN DEDICATED ADMIN MANAGEMENT INTERFACE -->
+<div id="adminScreen" class="admin-screen hidden" role="region" aria-label="Administrative Management Portal">
+  <!-- Top Admin Control Header -->
+  <header class="admin-topbar">
+    <div class="admin-topbar-brand">
+      <img src="motoRR.jpg" alt="R.R. Logo" class="admin-brand-logo" width="34" height="34">
+      <div>
+        <span class="admin-brand-title">R.R. MOTORCYCLE SHOP &bull; MANAGEMENT PORTAL</span>
+        <span class="admin-brand-sub">Shop Operations &amp; Booking Management &bull; Daet Branch</span>
+      </div>
+    </div>
+    <div class="admin-topbar-status">
+      <span class="status-dot-solid" aria-hidden="true"></span>
+      <span id="adminLoggedInEmail" class="admin-email-label">Authenticated Administrator</span>
+      <span class="admin-role-badge">Daet Shop Manager</span>
+    </div>
+    <div class="admin-topbar-actions">
+      <button type="button" class="btn btn-outline sm" id="adminBackToSiteBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon" style="width:14px;height:14px;" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Return to Customer View
+      </button>
+      <button type="button" class="btn btn-primary sm" id="adminLogoutBtn2">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Split Admin Workspace Layout -->
+  <div class="admin-body-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <nav class="admin-sidebar-nav">
+        <button type="button" class="admin-nav-btn active" data-t="analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Analytics &amp; Revenue</span>
+        </button>
+        <button type="button" class="admin-nav-btn" data-t="bookings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Service Bookings <span id="adminBadgeBookings" class="admin-nav-badge hidden">0</span></span>
+        </button>
+        <button type="button" class="admin-nav-btn" data-t="cms">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Catalog &amp; CMS</span>
+        </button>
+        <button type="button" class="admin-nav-btn" data-t="messages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Customer Inquiries <span id="adminBadgeMessages" class="admin-nav-badge hidden">0</span></span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Quick Stats -->
+      <div class="admin-sidebar-quickstats" id="adminSidebarStats"></div>
+    </aside>
+
+    <!-- Main Workspace Content -->
+    <main class="admin-main-panel">
+      <!-- High-Level KPI Summary Tiles -->
+      <div class="admin-kpi-row" id="adminKpiRow"></div>
+
+      <!-- Tab Content Area -->
+      <div id="adminBody" class="admin-content-area"></div>
+    </main>
+  </div>
+</div>
+
+<!-- 6. DYNAMIC CMS ITEM ADD/EDIT MODAL (No Code Modification Needed) -->
+<dialog id="itemModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="itemTitle">CMS Item Editor</h3>
+      <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    </div>
+    <form id="itemForm" class="modal-body form-grid" novalidate>
+      <div class="form-group full-width">
+        <label for="itemInputKind">Target Section / Collection <span class="req">*</span></label>
+        <select id="itemInputKind" name="kind">
+          <option value="services">Workshop Services Offered</option>
+          <option value="parts">Parts &amp; Accessories Catalog</option>
+          <option value="motors">Showcase Motor Builds</option>
+          <option value="accomplishments">Accomplishments (Before / After Dyno &amp; Resto)</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="itemInputTitle">Item / Service Name &amp; Title <span class="req">*</span></label>
+        <input id="itemInputTitle" name="title" placeholder="e.g. Ultrasonic Throttle Body Cleaning" required>
+      </div>
+
+      <div class="form-group">
+        <label for="itemInputCategory">Category</label>
+        <input id="itemInputCategory" name="category" placeholder="e.g. Core, Maintenance, CVT, ECU, Engine">
+      </div>
+
+      <div class="form-group" id="itemSubpartGroup">
+        <label for="itemInputSubpart">Subpart / Component Type</label>
+        <input id="itemInputSubpart" name="subpart" placeholder="e.g. Remap Module, Drive Belt, Flyball Rollers">
+      </div>
+
+      <div class="form-group full-width" id="itemFitmentGroup">
+        <label for="itemInputFitment">Compatible Motorcycle Models (Fitment)</label>
+        <input id="itemInputFitment" name="fitment" placeholder="e.g. Aerox 155 / NMAX / Click 125i (or Universal)">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="itemInputDesc">Description &amp; Specifications</label>
+        <textarea id="itemInputDesc" name="description" rows="3" placeholder="Provide technical specifications, tuning benefits, and details"></textarea>
+      </div>
+
+      <div class="form-group" id="itemPriceGroup">
+        <label for="itemInputPrice">Base Price / Labor Fee (PHP)</label>
+        <input id="itemInputPrice" name="price" type="number" min="0" step="0.01" placeholder="e.g. 650.00">
+      </div>
+
+      <div class="form-group hidden" id="itemTurnaroundGroup">
+        <label for="itemInputTurnaround">Estimated Completion Time / Turnaround</label>
+        <input id="itemInputTurnaround" name="turnaround" placeholder="e.g. Same Day (~2–3 hours), 1 Day, 2–3 Days">
+      </div>
+
+      <div class="form-group" id="itemStockGroup">
+        <label for="itemInputStock">Stock Status (Availability)</label>
+        <select id="itemInputStock" name="stock">
+          <option value="In Stock">In Stock (Available)</option>
+          <option value="Low Stock">Low Stock (Few left)</option>
+          <option value="Out of Stock">Out of Stock</option>
+          <option value="Pre-Order">Pre-Order</option>
+          <option value="Sold Out">Sold Out</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="itemInputImg">Image URL or Local Upload</label>
+        <input id="itemInputImg" name="image" placeholder="https://… or image filename">
+        <input type="file" id="itemFileField" name="file" accept="image/*" class="file-input-field">
+      </div>
+
+      <div class="form-group full-width ba-field-group hidden" id="baGroup">
+        <label>Before Image URL (Restoration / Dyno Baseline)
+          <input name="before" placeholder="https://…">
+        </label>
+        <label>After Image URL (Completed Tuning / Dyno Peak)
+          <input name="after" placeholder="https://…">
+        </label>
+      </div>
+
+      <div class="form-group full-width modal-actions">
+        <button class="btn btn-primary" type="submit">Save &amp; Sync to Firestore</button>
+        <button type="button" class="btn btn-outline sm" data-close>Cancel</button>
+      </div>
+      <div id="itemMsg" class="form-alert hidden full-width" role="status"></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- 7. PROOF PHOTO UPLOAD MODAL FOR ADMIN WORKFLOW -->
+<dialog id="proofModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>Attach Diagnostic / Repair Proof Photo</h3>
+      <button type="button" class="modal-close" data-close aria-label="Close modal">&times;</button>
+    </div>
+    <form id="proofForm" class="modal-body form-grid" novalidate>
+      <input type="hidden" id="proofBookingId" name="bookingId">
+      <div class="form-group full-width">
+        <label>Selected Booking: <b id="proofBookingLabel">RR-DEMO01</b></label>
+      </div>
+      <div class="form-group full-width">
+        <label for="proofFileInput">Select Photo from Device (Ongoing Repair / Dyno Graph / Done)</label>
+        <input type="file" id="proofFileInput" name="proofFile" accept="image/*" class="file-input-field" required>
+      </div>
+      <div class="form-group full-width">
+        <label for="proofNotesInput">Technician Note / Diagnostic Remarks</label>
+        <input id="proofNotesInput" name="proofNotes" placeholder="e.g. Ultrasonic cleaning complete; valves cleared to 0.08mm intake, 0.12mm exhaust.">
+      </div>
+      <div class="form-group full-width" id="proofPreviewBox" style="display:none; text-align:center;">
+        <img id="proofPreviewImg" src="" alt="Proof Preview" style="max-height:180px; margin:0.5rem auto; border-radius:var(--radius-sm); border:1px solid var(--line);">
+      </div>
+      <div class="form-group full-width modal-actions">
+        <button class="btn btn-primary" type="submit">Upload &amp; Attach to Booking</button>
+        <button type="button" class="btn btn-outline sm" data-close>Cancel</button>
+      </div>
+      <div id="proofMsg" class="form-alert hidden full-width" role="status"></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Floating Toast Notification -->
+<div id="toast" class="toast-notification" role="status" aria-live="polite"></div>
+
+<!-- Application Main Module -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
