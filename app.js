@@ -85,6 +85,27 @@ async function withTimeout(promise, ms = 4500) {
   ]);
 }
 
+// Upload proof photo to Firebase Storage when available, with Base64 fallback
+async function uploadProofImage(file, folder, recordId) {
+  if (!file) return "";
+  if (configured && storage) {
+    try {
+      const ext = (file.name || "jpg").split(".").pop();
+      const storageRef = ref(storage, `${folder}/${recordId}_${Date.now()}.${ext}`);
+      await withTimeout(uploadBytes(storageRef, file), 6000);
+      return await withTimeout(getDownloadURL(storageRef), 4000);
+    } catch (err) {
+      console.warn("Storage upload fallback to Base64:", err.message);
+    }
+  }
+  return await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(file);
+  });
+}
+
 function formatDateTime(timestamp) {
   if (!timestamp) return { full: "Recent", relative: "Just now" };
   let date;
@@ -259,7 +280,8 @@ const cache = {
   motors: [],
   parts: [],
   accomplishments: [],
-  bookings: []
+  bookings: [],
+  messages: []
 };
 
 // Check and load data from Firestore or local storage
@@ -348,6 +370,23 @@ async function loadAll() {
   populateBookingFormServices();
   populateShopPartsChecklist();
   calculateBookingPrice();
+
+  // Load Customer Inquiries / Messages cache
+  if (configured && db) {
+    try {
+      const mSnap = await withTimeout(getDocs(query(collection(db, "messages"), orderBy("createdAt", "desc"))), 3500);
+      if (mSnap) {
+        cache.messages = mSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        localStorage.setItem("rr_messages", JSON.stringify(cache.messages));
+      }
+    } catch (_) {}
+  }
+  if (!cache.messages.length) {
+    const localM = localStorage.getItem("rr_messages");
+    if (localM) {
+      try { cache.messages = JSON.parse(localM); } catch (_) {}
+    }
+  }
 }
 
 /* ==========================================================================
@@ -964,13 +1003,7 @@ if (bookForm) {
     const bookingId = generateBookingId();
 
     if (proofFile) {
-      try {
-        proofPhotoUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(proofFile);
-        });
-      } catch (_) {}
+      proofPhotoUrl = await uploadProofImage(proofFile, "payment_proofs", bookingId);
     }
 
     const bookingPayload = {
@@ -994,9 +1027,11 @@ if (bookForm) {
       remainingBalance: pricing.remainingBalance,
       downpaymentMethod: payMethod,
       downpaymentRef: paymentRef,
+      paymentProofPhoto: proofPhotoUrl,
+      paymentVerified: payMethod === "GCash" ? "Pending Verification" : "Cash on Site",
       status: "Pending",
       notes: formData.notes ? formData.notes.trim() : "Standard service check",
-      proofPhoto: proofPhotoUrl,
+      proofPhoto: "",
       createdAt: new Date().toISOString()
     };
 
@@ -1019,6 +1054,18 @@ if (bookForm) {
             ...bookingPayload,
             createdAt: serverTimestamp()
           }), 4000);
+          if (proofPhotoUrl) {
+            await withTimeout(setDoc(doc(db, "payment_proofs", bookingId), {
+              bookingId,
+              customer: bookingPayload.customer,
+              plate: bookingPayload.plate,
+              downpaymentRef: paymentRef,
+              amount: bookingPayload.downpayment,
+              imageUrl: proofPhotoUrl,
+              verifiedStatus: "Pending Verification",
+              createdAt: serverTimestamp()
+            }), 4000);
+          }
         } catch (dbErr) {
           console.warn("Firestore sync fallback to localStorage:", dbErr.message);
         }
@@ -1084,27 +1131,63 @@ if (contactForm) {
     e.preventDefault();
     const out = $("#contactMsg");
     const formData = Object.fromEntries(new FormData(contactForm));
+    const senderName = (formData.name || "").trim();
+    const senderEmail = (formData.email || "").trim();
+    const senderMessage = (formData.message || "").trim();
+
+    if (!senderName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail) || !senderMessage) {
+      msg(out, "Please enter your name, a valid email address, and your message.", false);
+      return;
+    }
 
     try {
+      const msgId = "MSG-" + Date.now();
       const messagePayload = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || "Not provided",
-        message: formData.message,
+        id: msgId,
+        name: senderName,
+        email: senderEmail,
+        phone: (formData.phone || "").trim() || "Not provided",
+        message: senderMessage,
         read: false,
+        replied: false,
         createdAt: new Date().toISOString()
       };
 
+      cache.messages.unshift(messagePayload);
+      localStorage.setItem("rr_messages", JSON.stringify(cache.messages));
+
       if (configured && db) {
         try {
-          await addDoc(collection(db, "messages"), {
+          await setDoc(doc(db, "messages", msgId), {
             ...messagePayload,
             createdAt: serverTimestamp()
           });
         } catch (_) {}
       }
 
-      msg(out, "Thank you! Your inquiry was delivered to R.R. Motorcycle Shop technicians.", true);
+      // Auto-send customer question to Admin Gmail via EmailJS
+      if (window.emailjs && emailjsConfig.publicKey && !emailjsConfig.publicKey.startsWith("PASTE")) {
+        try {
+          emailjs.init({ publicKey: emailjsConfig.publicKey });
+          await emailjs.send(emailjsConfig.serviceId, emailjsConfig.templateId, {
+            to_email: emailjsConfig.adminEmail,
+            booking_id: "INQUIRY-" + Date.now().toString().slice(-4),
+            customer: messagePayload.name,
+            phone: messagePayload.phone,
+            email: messagePayload.email,
+            bike: "Customer Inquiry / Question",
+            plate: "N/A",
+            service: "Contact Form Message",
+            date: new Date().toLocaleDateString("en-PH"),
+            payment: "Inquiry Only",
+            notes: messagePayload.message
+          });
+        } catch (emailErr) {
+          console.warn("EmailJS contact notification skipped:", emailErr);
+        }
+      }
+
+      msg(out, "Thank you! Your inquiry was sent to R.R. Motorcycle Shop.", true);
       contactForm.reset();
       toast("Message sent!");
     } catch (err) {
@@ -1426,12 +1509,14 @@ function showAdminScreen(initialTab = "analytics") {
   const sidebarEl = $("#sidebar");
   const mobileTopbar = $(".mobile-topbar");
   const adminCmsBar = $("#adminCmsBar");
+  const floatingThemeBtn = $("#themeBtn");
 
   if (adminScreen) adminScreen.classList.remove("hidden");
   if (mainWrapper) mainWrapper.style.display = "none";
   if (sidebarEl) sidebarEl.style.display = "none";
   if (mobileTopbar) mobileTopbar.style.display = "none";
   if (adminCmsBar) adminCmsBar.classList.add("hidden");
+  if (floatingThemeBtn) floatingThemeBtn.classList.add("hidden");
 
   document.body.style.overflow = "hidden";
   renderAdminKpis();
@@ -1444,12 +1529,14 @@ function hideAdminScreen() {
   const sidebarEl = $("#sidebar");
   const mobileTopbar = $(".mobile-topbar");
   const adminCmsBar = $("#adminCmsBar");
+  const floatingThemeBtn = $("#themeBtn");
 
   if (adminScreen) adminScreen.classList.add("hidden");
   if (mainWrapper) mainWrapper.style.display = "";
   if (sidebarEl) sidebarEl.style.display = "";
   if (mobileTopbar) mobileTopbar.style.display = "";
   if (adminCmsBar && isAdmin) adminCmsBar.classList.remove("hidden");
+  if (floatingThemeBtn) floatingThemeBtn.classList.remove("hidden");
 
   document.body.style.overflow = "";
 }
@@ -1499,6 +1586,20 @@ function renderAdminKpis() {
     bBadge.classList.toggle("hidden", pendingCount === 0);
   }
 
+  const unverifiedProofs = bookings.filter((b) => b.paymentProofPhoto && b.paymentVerified !== "Verified").length;
+  const pBadge = $("#adminBadgeProofs");
+  if (pBadge) {
+    pBadge.textContent = unverifiedProofs;
+    pBadge.classList.toggle("hidden", unverifiedProofs === 0);
+  }
+
+  const unreadMsgs = (cache.messages || []).filter((m) => !m.read).length;
+  const mBadge = $("#adminBadgeMessages");
+  if (mBadge) {
+    mBadge.textContent = unreadMsgs;
+    mBadge.classList.toggle("hidden", unreadMsgs === 0);
+  }
+
   if (sideStats) {
     sideStats.innerHTML = `
       <div style="margin-bottom: 0.4rem;">
@@ -1529,6 +1630,8 @@ function openAdminTab(tabName) {
     renderAnalyticsPanel();
   } else if (tabName === "bookings") {
     renderAdminBookingsView();
+  } else if (tabName === "proofs") {
+    renderAdminPaymentProofsView();
   } else if (tabName === "cms") {
     renderAdminCmsManagerView();
   } else if (tabName === "messages") {
@@ -1934,6 +2037,11 @@ function renderAdminBookingsView() {
                 <td>
                   <span style="color:var(--teal); font-weight:700;">DP: ${peso(b.downpayment || 50)}</span><br>
                   <span style="color:var(--gold); font-size:0.85rem;">Bal: ${peso(b.remainingBalance || 0)}</span>
+                  ${
+                    b.paymentProofPhoto
+                      ? `<br><span class="badge ${b.paymentVerified === "Verified" ? "b-in" : b.paymentVerified === "Flagged" ? "b-out" : "b-low"}" style="font-size:0.68rem; margin-top:0.25rem;">${esc(b.paymentVerified || "Pending Verification")}</span>`
+                      : ""
+                  }
                 </td>
                 <td>
                   <div class="admin-action-btn-group" style="margin-bottom: 0.4rem;">
@@ -1941,7 +2049,8 @@ function renderAdminBookingsView() {
                     ${isApproved ? `<button type="button" class="btn-service" data-quick-st="${esc(b.id || b.bookingId)}" data-target="In-Service">🔧 In-Service</button>` : ""}
                     ${isInService ? `<button type="button" class="btn-ready" data-quick-st="${esc(b.id || b.bookingId)}" data-target="Ready for Pick-Up">🏁 Mark Ready</button>` : ""}
                     ${isReady ? `<button type="button" class="btn-complete" data-quick-st="${esc(b.id || b.bookingId)}" data-target="Completed">✓ Complete &amp; Release</button>` : ""}
-                    <button type="button" class="btn-receipt-action" data-attach-proof="${esc(b.id || b.bookingId)}">📷 Proof</button>
+                    ${b.paymentProofPhoto ? `<button type="button" class="btn-receipt-action" data-view-payproof="${esc(b.id || b.bookingId)}">💳 Pay Proof</button>` : ""}
+                    <button type="button" class="btn-receipt-action" data-attach-proof="${esc(b.id || b.bookingId)}">📷 Work Proof</button>
                   </div>
                   <select data-st-change="${esc(b.id || b.bookingId)}" class="st" style="width:100%; font-size:0.82rem; padding:0.25rem 0.5rem;">
                     ${STATUSES.map((s) => `<option value="${s}" ${s === currentStatus ? "selected" : ""}>${s}</option>`).join("")}
@@ -1977,6 +2086,15 @@ function renderAdminBookingsView() {
   $$("[data-st-change]", body).forEach((sel) => {
     sel.onchange = async () => {
       await updateBookingStatus(sel.dataset.stChange, sel.value);
+    };
+  });
+
+  // Customer payment proof inspection trigger
+  $$("[data-view-payproof]", body).forEach((btn) => {
+    btn.onclick = () => {
+      const bId = btn.dataset.viewPayproof;
+      const found = cache.bookings.find((b) => (b.id || b.bookingId) === bId);
+      if (found) openPaymentProofModal(found);
     };
   });
 
@@ -2088,6 +2206,111 @@ if (proofForm) {
   };
 }
 
+// Customer Payment Proofs Storage & Verification Vault
+let activePaymentProofBooking = null;
+
+function renderAdminPaymentProofsView() {
+  const body = $("#adminBody");
+  if (!body) return;
+
+  const proofs = (cache.bookings || []).filter((b) => b.paymentProofPhoto);
+
+  body.innerHTML = `
+    <div class="admin-section-header">
+      <div>
+        <span class="admin-section-title">Customer Payment Proofs Storage</span>
+        <p class="sub" style="margin: 0.25rem 0 0; font-size: 0.88rem;">Inspect uploaded GCash screenshots to verify ₱50.00 reservation deposits before approving bay slots.</p>
+      </div>
+      <span class="badge b-in">${proofs.length} Stored Receipts</span>
+    </div>
+
+    ${
+      proofs.length
+        ? `<div class="proof-vault-grid">
+            ${proofs.map((b) => {
+              const vStatus = b.paymentVerified || "Pending Verification";
+              const vClass = vStatus === "Verified" ? "b-in" : vStatus === "Flagged" ? "b-out" : "b-low";
+              return `
+                <article class="proof-vault-card">
+                  <img src="${esc(b.paymentProofPhoto)}" alt="GCash Proof for ${esc(b.bookingId || b.id)}" class="proof-vault-thumb" data-inspect-proof="${esc(b.id || b.bookingId)}">
+                  <div class="proof-vault-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+                      <b>${esc(b.bookingId || b.id)}</b>
+                      <span class="badge ${vClass}">${esc(vStatus)}</span>
+                    </div>
+                    <div style="font-size:0.88rem; font-weight:600; color:var(--text-pure);">${esc(b.customer)}</div>
+                    <div style="font-size:0.8rem; color:var(--muted);">Plate: <b>${esc(b.plate)}</b> &bull; Ref: <b style="color:var(--gold);">${esc(b.downpaymentRef || "N/A")}</b></div>
+                    <button type="button" class="btn btn-outline sm" style="margin-top:auto;" data-inspect-proof="${esc(b.id || b.bookingId)}">Inspect &amp; Verify</button>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>`
+        : `<div class="track-placeholder"><p>No customer payment proof screenshots uploaded yet.</p></div>`
+    }
+  `;
+
+  $$("[data-inspect-proof]", body).forEach((el) => {
+    el.onclick = () => {
+      const bId = el.dataset.inspectProof;
+      const found = cache.bookings.find((b) => (b.id || b.bookingId) === bId);
+      if (found) openPaymentProofModal(found);
+    };
+  });
+}
+
+function openPaymentProofModal(booking) {
+  const modal = $("#paymentProofModal");
+  if (!modal || !booking) return;
+  activePaymentProofBooking = booking;
+
+  const meta = $("#payProofMeta");
+  const img = $("#payProofFullImg");
+  if (meta) {
+    meta.innerHTML = `
+      <div><span>Booking ID:</span> <b>${esc(booking.bookingId || booking.id)}</b></div>
+      <div><span>Customer:</span> <b>${esc(booking.customer)}</b></div>
+      <div><span>Plate No:</span> <b>${esc(booking.plate)}</b></div>
+      <div><span>GCash Ref #:</span> <b style="color:var(--gold);">${esc(booking.downpaymentRef || "N/A")}</b></div>
+      <div><span>Amount:</span> <b>${peso(booking.downpayment || 50)}</b></div>
+      <div><span>Verification:</span> <b>${esc(booking.paymentVerified || "Pending Verification")}</b></div>
+    `;
+  }
+  if (img) img.src = booking.paymentProofPhoto || "";
+  modal.showModal();
+}
+
+async function updatePaymentVerification(newStatus) {
+  if (!activePaymentProofBooking) return;
+  const bId = activePaymentProofBooking.id || activePaymentProofBooking.bookingId;
+  activePaymentProofBooking.paymentVerified = newStatus;
+
+  localStorage.setItem(`rr_booking_${bId}`, JSON.stringify(activePaymentProofBooking));
+  localStorage.setItem("rr_bookings", JSON.stringify(cache.bookings));
+
+  if (configured && db) {
+    try {
+      await withTimeout(updateDoc(doc(db, "bookings", bId), {
+        paymentVerified: newStatus,
+        updatedAt: serverTimestamp()
+      }), 3500);
+      await withTimeout(updateDoc(doc(db, "payment_proofs", bId), {
+        verifiedStatus: newStatus,
+        updatedAt: serverTimestamp()
+      }), 3500);
+    } catch (_) {}
+  }
+
+  toast(`Payment proof marked as "${newStatus}".`);
+  $("#paymentProofModal")?.close();
+  renderAdminKpis();
+  if (activeAdminTab === "proofs") renderAdminPaymentProofsView();
+  if (activeAdminTab === "bookings") renderAdminBookingsView();
+}
+
+$("#verifyPayProofBtn")?.addEventListener("click", () => updatePaymentVerification("Verified"));
+$("#flagPayProofBtn")?.addEventListener("click", () => updatePaymentVerification("Flagged"));
+
 // Preview proof photo on file select
 $("#proofFileInput")?.addEventListener("change", (e) => {
   const file = e.target.files[0];
@@ -2193,15 +2416,149 @@ function renderAdminCmsManagerView() {
   });
 }
 
-// Inquiries / Messages View
+// Inquiries / Messages View (Admin Inbox + EmailJS / Gmail Reply)
 function renderAdminMessagesView() {
   const body = $("#adminBody");
   if (!body) return;
+
+  const msgs = cache.messages || [];
+
   body.innerHTML = `
-    <div style="background:var(--surface2); padding:1rem; border-radius:var(--radius-sm); border:1px solid var(--line);">
-      <p style="margin:0; font-size:0.9rem; color:var(--text);">Customer messages are forwarded to <b>${emailjsConfig.adminEmail}</b> and synced in real-time.</p>
+    <div class="admin-section-header">
+      <div>
+        <span class="admin-section-title">Customer Inquiries &amp; Messages (${msgs.length})</span>
+        <p class="sub" style="margin: 0.25rem 0 0; font-size: 0.88rem;">Messages from the Contact form are saved here and forwarded to <b>${esc(emailjsConfig.adminEmail)}</b>. You can reply directly to the customer's email.</p>
+      </div>
+      <button type="button" class="btn btn-outline sm" id="refreshMessagesBtn">🔄 Sync Messages</button>
     </div>
+
+    ${
+      msgs.length
+        ? `<div class="scroll-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sender</th>
+                  <th>Message / Question</th>
+                  <th>Received</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Reply &amp; Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${msgs.map((m) => {
+                  const dt = formatDateTime(m.createdAt);
+                  const statusBadge = m.replied
+                    ? `<span class="badge b-in">Replied</span>`
+                    : m.read
+                    ? `<span class="badge b-pre">Read</span>`
+                    : `<span class="badge b-low">Unread</span>`;
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${esc(m.name)}</strong><br>
+                        <small style="color:var(--gold);">${esc(m.email)}</small><br>
+                        <small style="color:var(--muted);">${esc(m.phone || "No phone")}</small>
+                      </td>
+                      <td style="max-width:340px; white-space:normal;">${esc(m.message)}</td>
+                      <td><small>${esc(dt.full)}</small></td>
+                      <td>${statusBadge}</td>
+                      <td style="text-align:right; white-space:nowrap;">
+                        <div class="admin-action-btn-group" style="justify-content:flex-end;">
+                          <button type="button" class="btn-approve" data-reply-msg="${esc(m.id)}">✉️ Reply via Email</button>
+                          <a class="btn-receipt-action" href="mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent("Re: R.R. Motorcycle Shop Inquiry")}&body=${encodeURIComponent(`Hi ${m.name},\n\nRegarding your message: "${m.message}"\n\n`)}" style="text-decoration:none;">Gmail</a>
+                          ${!m.read ? `<button type="button" class="btn-receipt-action" data-read-msg="${esc(m.id)}">✓ Read</button>` : ""}
+                          <button type="button" class="btn-receipt-action" data-del-msg="${esc(m.id)}" style="color:var(--danger); border-color:var(--danger);">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>`
+        : `<div class="track-placeholder"><p>No customer inquiries yet. Messages sent from the Contact section will appear here.</p></div>`
+    }
   `;
+
+  $("#refreshMessagesBtn")?.addEventListener("click", async () => {
+    toast("Syncing messages…");
+    await loadAll();
+    renderAdminKpis();
+    renderAdminMessagesView();
+  });
+
+  $$("[data-reply-msg]", body).forEach((btn) => {
+    btn.onclick = async () => {
+      const m = msgs.find((x) => x.id === btn.dataset.replyMsg);
+      if (!m || !m.email) return;
+      const replyText = prompt(`Reply to ${m.name} (${m.email}):`, `Hi ${m.name}, thank you for contacting R.R. Motorcycle Shop & Parts! `);
+      if (!replyText || !replyText.trim()) return;
+
+      if (window.emailjs && emailjsConfig.publicKey && !emailjsConfig.publicKey.startsWith("PASTE")) {
+        try {
+          emailjs.init({ publicKey: emailjsConfig.publicKey });
+          await emailjs.send(emailjsConfig.serviceId, emailjsConfig.templateId, {
+            to_email: m.email,
+            booking_id: "REPLY-RR-SHOP",
+            customer: m.name,
+            phone: m.phone || "N/A",
+            email: emailjsConfig.adminEmail,
+            bike: "R.R. Motorcycle Shop & Parts",
+            plate: "Daet, Camarines Norte",
+            service: "Reply to Your Inquiry",
+            date: new Date().toLocaleDateString("en-PH"),
+            payment: "0918 288 6282",
+            notes: replyText.trim()
+          });
+          m.read = true;
+          m.replied = true;
+          localStorage.setItem("rr_messages", JSON.stringify(cache.messages));
+          if (configured && db) {
+            try {
+              await withTimeout(updateDoc(doc(db, "messages", m.id), { read: true, replied: true }), 3000);
+            } catch (_) {}
+          }
+          toast(`Reply emailed to ${m.email}!`);
+          renderAdminKpis();
+          renderAdminMessagesView();
+        } catch (err) {
+          toast("EmailJS reply failed — use the Gmail button to reply directly.");
+        }
+      } else {
+        toast("EmailJS not configured — use the Gmail button.");
+      }
+    };
+  });
+
+  $$("[data-read-msg]", body).forEach((btn) => {
+    btn.onclick = async () => {
+      const m = msgs.find((x) => x.id === btn.dataset.readMsg);
+      if (!m) return;
+      m.read = true;
+      localStorage.setItem("rr_messages", JSON.stringify(cache.messages));
+      if (configured && db) {
+        try { await withTimeout(updateDoc(doc(db, "messages", m.id), { read: true }), 3000); } catch (_) {}
+      }
+      renderAdminKpis();
+      renderAdminMessagesView();
+    };
+  });
+
+  $$("[data-del-msg]", body).forEach((btn) => {
+    btn.onclick = async () => {
+      if (!confirm("Delete this customer message?")) return;
+      const id = btn.dataset.delMsg;
+      cache.messages = cache.messages.filter((x) => x.id !== id);
+      localStorage.setItem("rr_messages", JSON.stringify(cache.messages));
+      if (configured && db) {
+        try { await withTimeout(deleteDoc(doc(db, "messages", id)), 3000); } catch (_) {}
+      }
+      toast("Message deleted.");
+      renderAdminKpis();
+      renderAdminMessagesView();
+    };
+  });
 }
 
 // Dynamic CMS Modal Opener (For Products, Parts, Services, Accomplishments)
